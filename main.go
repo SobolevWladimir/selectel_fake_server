@@ -41,7 +41,7 @@ func (ct *CounterHandler) HandlerGetFile(w http.ResponseWriter, r *http.Request)
 		fmt.Fprintln(w, err.Error())
 		return
 	}
-	w.WriteHeader(201)
+	w.WriteHeader(200)
 	w.Write(bytes)
 }
 
