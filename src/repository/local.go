@@ -34,6 +34,10 @@ func (rp *RepositoryLocal) SaveFile(data []byte, filePath string) error {
 
 func (rp *RepositoryLocal) GetFile(filePath string) ([]byte, error) {
 	pathInDisk := rp.createFilePath(filePath)
-	return  os.ReadFile(pathInDisk);
+	return os.ReadFile(pathInDisk)
 }
 
+func (rp *RepositoryLocal) DeleteFile(filePath string) error {
+	pathInDisk := rp.createFilePath(filePath)
+	return os.Remove(pathInDisk)
+}

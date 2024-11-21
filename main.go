@@ -16,31 +16,65 @@ type CounterHandler struct {
 const settinsRmsPage = "/settings/rms.json"
 const settinsRoutePage = "/settings/route.json"
 
-func (ct *CounterHandler) saveFile(r *http.Request) error {
+func (ct *CounterHandler) HandlerSaveFile(w http.ResponseWriter, r *http.Request) {
 	requestBody, err := io.ReadAll(r.Body)
 	if err != nil {
-		return err
+		w.WriteHeader(400)
+		fmt.Fprintln(w, err.Error())
+		return
 	}
 
-	ct.Repository.SaveFile(requestBody, r.URL.Path)
-	return nil
+	err = ct.Repository.SaveFile(requestBody, r.URL.Path)
+	if err != nil {
+		w.WriteHeader(400)
+		fmt.Fprintln(w, err.Error())
+		return
+	}
+	w.WriteHeader(201)
+	fmt.Fprintln(w, string("ok"))
 }
+
+func (ct *CounterHandler) HandlerGetFile(w http.ResponseWriter, r *http.Request) {
+	bytes, err := ct.Repository.GetFile(r.URL.Path)
+	if err != nil {
+		w.WriteHeader(400)
+		fmt.Fprintln(w, err.Error())
+		return
+	}
+	w.WriteHeader(201)
+	w.Write(bytes)
+}
+
+func (ct *CounterHandler) HandlerDeleteFile(w http.ResponseWriter, r *http.Request) {
+	err := ct.Repository.DeleteFile(r.URL.Path)
+	if err != nil {
+		w.WriteHeader(400)
+		fmt.Println("delete", err.Error())
+		fmt.Fprintln(w, err.Error())
+		return
+	}
+	w.WriteHeader(204)
+	fmt.Fprintln(w, string("ok"))
+}
+
 func (ct *CounterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("\n----------------")
 	fmt.Println(r.Method, r.URL.String())
 	if r.Method == "PUT" {
-		err := ct.saveFile(r)
-		if err == nil {
-			w.WriteHeader(201)
-			fmt.Fprintln(w, string("ok"))
-			return
-		}
-		fmt.Println("error: ", err.Error())
-		w.WriteHeader(400)
-		fmt.Fprintln(w, err.Error())
-	} else {
-		w.WriteHeader(200)
+		ct.HandlerSaveFile(w, r)
+		return
 	}
+	if r.Method == "GET" {
+		ct.HandlerGetFile(w, r)
+		return
+	}
+
+	if r.Method == "DELETE" {
+		ct.HandlerDeleteFile(w, r)
+		return
+	}
+	w.WriteHeader(400)
+	fmt.Fprintln(w, "method not exist")
 	fmt.Println("---------------- end ---------------------")
 }
 func (ct *CounterHandler) setHeader(w http.ResponseWriter, resp *http.Response) {
