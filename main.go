@@ -10,6 +10,7 @@ import (
 )
 
 type CounterHandler struct {
+	Repository repository.RepositoryInterface
 }
 
 const settinsRmsPage = "/settings/rms.json"
@@ -21,8 +22,7 @@ func (ct *CounterHandler) saveFile(r *http.Request) error {
 		return err
 	}
 
-	repository := &repository.RepositoryLocal{RootDir: "./files"}
-	repository.SaveFile(requestBody, r.URL.RawPath)
+	ct.Repository.SaveFile(requestBody, r.URL.Path)
 	return nil
 }
 func (ct *CounterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +40,6 @@ func (ct *CounterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, err.Error())
 	} else {
 		w.WriteHeader(200)
-
 	}
 	fmt.Println("---------------- end ---------------------")
 }
@@ -50,7 +49,8 @@ func (ct *CounterHandler) setHeader(w http.ResponseWriter, resp *http.Response) 
 	}
 }
 func main() {
-	th := &CounterHandler{}
+	repository := &repository.RepositoryLocal{RootDir: "./files"}
+	th := &CounterHandler{Repository: repository}
 	s := &http.Server{
 		Addr:           ":8051",
 		Handler:        th,
